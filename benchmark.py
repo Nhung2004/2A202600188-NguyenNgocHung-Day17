@@ -154,7 +154,9 @@ class Benchmarker:
 
     def _generate_report(self, results):
         os.makedirs("reports", exist_ok=True)
+        # 1. Export to Markdown
         with open("reports/BENCHMARK.md", "w", encoding="utf-8") as f:
+            # ... (markdown logic remains)
             f.write("# Benchmark Report - Multi-Memory Agent\n\n")
             f.write("| # | Scenario | No-memory result | With-memory result | Pass? |\n")
             f.write("|---|----------|------------------|---------------------|-------|\n")
@@ -169,6 +171,11 @@ class Benchmarker:
             f.write("### 3. Privacy & Limitations\n")
             f.write("- **PII Risk**: Lưu trữ tên và thông tin y tế (dị ứng) cần có cơ chế xóa hoặc TTL.\n")
             f.write("- **Limitation**: Hiện tại agent sử dụng heuristic cho việc router, cần LLM để phân loại intent chính xác hơn khi scale.\n")
+
+        # 2. Export to JSON (Yeu cau nop bai)
+        with open("reports/benchmark_conversation.json", "w", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+        print(f"\nDa xuat bao cao chi tiet ra reports/benchmark_conversation.json")
 
 if __name__ == "__main__":
     bench = Benchmarker()

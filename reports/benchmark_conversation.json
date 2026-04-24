@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "Recall User Name",
+    "no_mem": "Know",
+    "with_mem": "Bạn tên là Hung.",
+    "pass": true
+  },
+  {
+    "id": 2,
+    "name": "Allergy Conflict Update",
+    "no_mem": "Know",
+    "with_mem": "Bạn bị dị ứng dau nanh.",
+    "pass": true
+  },
+  {
+    "id": 3,
+    "name": "Episodic Recall",
+    "no_mem": "Know",
+    "with_mem": "Lần trước bạn đã hoàn thành: Toi da hoan thanh viec debug Docker roi..",
+    "pass": true
+  },
+  {
+    "id": 4,
+    "name": "Semantic Retrieval",
+    "no_mem": "Know",
+    "with_mem": "Theo tài liệu, service name là 'Docker service name for local development is 'web-app'.'.",
+    "pass": true
+  },
+  {
+    "id": 5,
+    "name": "Multi-turn Persistence",
+    "no_mem": "Know",
+    "with_mem": "Bạn thích chơi bong da.",
+    "pass": true
+  },
+  {
+    "id": 6,
+    "name": "Knowledge Recall (DB)",
+    "no_mem": "Know",
+    "with_mem": "Dùng lệnh 'To reset the database, use 'npm run db:reset'.'.",
+    "pass": true
+  },
+  {
+    "id": 7,
+    "name": "Fact Persistence (Restart)",
+    "no_mem": "Know",
+    "with_mem": "Bạn tên là Hung.",
+    "pass": true
+  },
+  {
+    "id": 8,
+    "name": "Location Recall",
+    "no_mem": "Know",
+    "with_mem": "Bạn sống ở Ha noi.",
+    "pass": true
+  },
+  {
+    "id": 9,
+    "name": "Multiple Episodes",
+    "no_mem": "Know",
+    "with_mem": "Lần trước bạn đã hoàn thành: Toi da lam xong bai 2..",
+    "pass": true
+  },
+  {
+    "id": 10,
+    "name": "Complex Update (Location)",
+    "no_mem": "Know",
+    "with_mem": "Bạn sống ở Sai gon.",
+    "pass": true
+  }
+]
