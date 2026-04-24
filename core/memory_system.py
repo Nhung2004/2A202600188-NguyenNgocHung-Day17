@@ -108,11 +108,33 @@ class SemanticMemory(BaseMemory):
         )
     
     def retrieve(self, query: str, n_results: int = 2) -> List[str]:
-        results = self.collection.query(
-            query_texts=[query],
-            n_results=n_results
-        )
-        return results['documents'][0] if results['documents'] else []
+        query_lower = query.lower()
+        # Keyword search fallback (Giai phap on dinh cho Lab)
+        hits = []
+        for doc in self.collection.get()['documents']:
+            # Neu tu khoa xuat hien trong document, uu tien dua len dau
+            score = 0
+            words = query_lower.split()
+            for word in words:
+                if len(word) > 2 and word in doc.lower():
+                    score += 1
+            if score > 0:
+                hits.append((score, doc))
+        
+        if hits:
+            # Sap xep theo score giam dan
+            hits.sort(key=lambda x: x[0], reverse=True)
+            return [h[1] for h in hits[:n_results]]
+
+        # Neu khong co keyword match, dung ChromaDB query (Mac dinh)
+        try:
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=n_results
+            )
+            return results['documents'][0] if results['documents'] else []
+        except:
+            return []
 
 class MemoryRouter:
     @staticmethod
