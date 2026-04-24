@@ -1,7 +1,7 @@
 import json
 import os
+import tiktoken
 from typing import List, Dict, Any, Optional
-from collections import deque
 
 class BaseMemory:
     def save(self, data: Any):
@@ -9,20 +9,41 @@ class BaseMemory:
     def retrieve(self, query: str) -> Any:
         pass
 
+class TokenCounter:
+    def __init__(self, model: str = "gpt-3.5-turbo"):
+        try:
+            self.encoding = tiktoken.encoding_for_model(model)
+        except:
+            self.encoding = tiktoken.get_encoding("cl100k_base")
+    
+    def count(self, text: str) -> int:
+        return len(self.encoding.encode(text))
+
 class ShortTermMemory(BaseMemory):
-    def __init__(self, max_size: int = 10):
-        self.history = deque(maxlen=max_size)
+    def __init__(self, max_tokens: int = 1000):
+        self.history = []
+        self.max_tokens = max_tokens
+        self.token_counter = TokenCounter()
     
     def save(self, message: Dict[str, str]):
         self.history.append(message)
+        self._trim()
     
-    def retrieve(self, limit: int = 5) -> List[Dict[str, str]]:
-        return list(self.history)[-limit:]
+    def _trim(self):
+        while self.history and self.get_total_tokens() > self.max_tokens:
+            self.history.pop(0)
+            
+    def get_total_tokens(self) -> int:
+        return sum(self.token_counter.count(m["content"]) for m in self.history)
+    
+    def retrieve(self, limit: int = 10) -> List[Dict[str, str]]:
+        return self.history[-limit:]
 
 class LongTermMemory(BaseMemory):
-    """Simulated Redis-style KV store using JSON"""
-    def __init__(self, filepath: str = "profile.json"):
+    def __init__(self, filepath: str = "data/profile.json"):
         self.filepath = filepath
+        # Đảm bảo thư mục data tồn tại
+        os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
         self.data = self._load()
     
     def _load(self):
@@ -46,9 +67,11 @@ class LongTermMemory(BaseMemory):
         return self.data
 
 class EpisodicMemory(BaseMemory):
-    """JSON episodic log"""
-    def __init__(self, filepath: str = "episodes.jsonl"):
+    def __init__(self, filepath: str = "data/episodes.jsonl"):
         self.filepath = filepath
+        # Đảm bảo thư mục data tồn tại
+        if os.path.dirname(self.filepath):
+            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
     
     def save(self, episode: Dict[str, Any]):
         with open(self.filepath, "a", encoding="utf-8") as f:
@@ -63,42 +86,45 @@ class EpisodicMemory(BaseMemory):
         return episodes[-limit:]
 
 class SemanticMemory(BaseMemory):
-    """Mock semantic memory using keyword search to avoid downloading embedding models"""
     def __init__(self, collection_name: str = "knowledge"):
-        self.documents = []
+        import chromadb
+        from chromadb.api.types import EmbeddingFunction, Documents, Embeddings
+        
+        class MockEmbeddingFunction(EmbeddingFunction):
+            def __call__(self, input: Documents) -> Embeddings:
+                return [[0.1] * 384 for _ in input]
+        
+        self.client = chromadb.Client()
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name,
+            embedding_function=MockEmbeddingFunction()
+        )
     
     def save(self, text: str, metadata: Dict[str, Any] = None, doc_id: str = None):
-        self.documents.append({"text": text, "metadata": metadata or {}})
+        self.collection.add(
+            documents=[text],
+            metadatas=[metadata or {}],
+            ids=[doc_id or str(hash(text))]
+        )
     
     def retrieve(self, query: str, n_results: int = 2) -> List[str]:
-        query_words = set(query.lower().split())
-        scored_docs = []
-        for doc in self.documents:
-            doc_words = set(doc["text"].lower().split())
-            score = len(query_words.intersection(doc_words))
-            if score > 0:
-                scored_docs.append((score, doc["text"]))
-        
-        scored_docs.sort(key=lambda x: x[0], reverse=True)
-        return [doc[1] for doc in scored_docs[:n_results]]
+        results = self.collection.query(
+            query_texts=[query],
+            n_results=n_results
+        )
+        return results['documents'][0] if results['documents'] else []
 
 class MemoryRouter:
-    """Routes queries to appropriate memory backends"""
     @staticmethod
     def route(query: str) -> List[str]:
         query_lower = query.lower()
-        targets = ["short-term"] # Always include short-term
-        
-        # Heuristic rules for routing
+        targets = ["short-term"]
         if any(word in query_lower for word in ["tôi là", "tên tôi", "thích", "dị ứng", "sống ở", "ten toi", "di ung", "song o", "thich", "chuyển", "chuyen", "ở đâu", "o dau"]):
             targets.append("long-term")
-        
         if any(word in query_lower for word in ["trước đây", "lần trước", "đã làm", "kết quả", "lan truoc", "da lam"]):
             targets.append("episodic")
-            
         if any(word in query_lower for word in ["là gì", "định nghĩa", "hướng dẫn", "làm sao để", "la gi", "dinh nghia", "huong dan", "lam sao de", "docker", "database"]):
             targets.append("semantic")
-            
         return list(set(targets))
 
 class MemorySystem:
@@ -108,7 +134,5 @@ class MemorySystem:
         self.episodic = EpisodicMemory()
         self.semantic = SemanticMemory()
         self.router = MemoryRouter()
-        
-        # Add some initial semantic data for testing
         self.semantic.save("Docker service name for local development is 'web-app'.", {"type": "lesson"})
         self.semantic.save("To reset the database, use 'npm run db:reset'.", {"type": "manual"})

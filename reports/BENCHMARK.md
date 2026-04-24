@@ -4,13 +4,13 @@
 |---|----------|------------------|---------------------|-------|
 | 1 | Recall User Name | Know | Bạn tên là Hung. | Pass |
 | 2 | Allergy Conflict Update | Know | Bạn bị dị ứng dau nanh. | Pass |
-| 3 | Episodic Recall | Know | Lần trước bạn đã hoàn thành: toi da hoan thanh viec debug docker roi.. | Pass |
+| 3 | Episodic Recall | Know | Lần trước bạn đã hoàn thành: Toi da hoan thanh viec debug Docker roi.. | Pass |
 | 4 | Semantic Retrieval | Know | Theo tài liệu, service name là 'Docker service name for local development is 'web-app'.'. | Pass |
 | 5 | Multi-turn Persistence | Know | Bạn thích chơi bong da. | Pass |
-| 6 | Knowledge Recall (DB) | Know | Dùng lệnh 'To reset the database, use 'npm run db:reset'.'. | Pass |
+| 6 | Knowledge Recall (DB) | Unknown | Dùng lệnh 'Docker service name for local development is 'web-app'.'. | Fail |
 | 7 | Fact Persistence (Restart) | Know | Bạn tên là Hung. | Pass |
 | 8 | Location Recall | Know | Bạn sống ở Ha noi. | Pass |
-| 9 | Multiple Episodes | Know | Lần trước bạn đã hoàn thành: toi da lam xong bai 2.. | Pass |
+| 9 | Multiple Episodes | Know | Lần trước bạn đã hoàn thành: Toi da lam xong bai 2.. | Pass |
 | 10 | Complex Update (Location) | Know | Bạn sống ở Sai gon. | Pass |
 
 ## Reflection

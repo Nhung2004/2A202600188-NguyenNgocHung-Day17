@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from agent import MultiMemoryAgent
+from core.agent import MultiMemoryAgent
 
 class Benchmarker:
     def __init__(self):
@@ -68,7 +68,7 @@ class Benchmarker:
                 "turns": [
                     {"role": "user", "content": "Ten toi la Hung."},
                     {"role": "user", "content": "Tam biet."},
-                    {"role": "user", "content": "Toi ten gi?"} # Added to verify persistence
+                    {"role": "user", "content": "Toi ten gi?"}
                 ],
                 "expected": "Hung"
             },
@@ -109,11 +109,16 @@ class Benchmarker:
         print(f"{'#':<3} | {'Scenario':<25} | {'No-Memory':<15} | {'With-Memory':<15} | {'Pass?'}")
         print("-" * 70)
         
+        # Ensure data and reports directories exist
+        os.makedirs("data", exist_ok=True)
+        os.makedirs("reports", exist_ok=True)
+        
         for scene in self.scenarios:
-            # 1. No-memory run (Fresh agent, no persistence files)
-            if os.path.exists("profile.json"): os.remove("profile.json")
-            if os.path.exists("episodes.jsonl"): os.remove("episodes.jsonl")
+            # Cleanup previous data
+            if os.path.exists("data/profile.json"): os.remove("data/profile.json")
+            if os.path.exists("data/episodes.jsonl"): os.remove("data/episodes.jsonl")
             
+            # 1. No-memory run
             no_mem_agent = MultiMemoryAgent()
             no_mem_state = {"messages": [], "user_profile": {}, "episodes": [], "semantic_hits": [], "response": "", "current_query": ""}
             no_mem_res = ""
@@ -121,11 +126,9 @@ class Benchmarker:
                 no_mem_state["messages"] = [turn]
                 no_mem_state = no_mem_agent.app.invoke(no_mem_state)
                 no_mem_res = no_mem_state["response"]
-            
-            # Check if it knows the answer (it shouldn't for recall tasks)
             no_mem_passed = scene["expected"].lower() in no_mem_res.lower()
             
-            # 2. With-memory run (Sequential turns on the same agent instance)
+            # 2. With-memory run
             with_mem_agent = MultiMemoryAgent()
             with_mem_state = {"messages": [], "user_profile": {}, "episodes": [], "semantic_hits": [], "response": "", "current_query": ""}
             with_mem_res = ""
@@ -145,17 +148,13 @@ class Benchmarker:
                 "pass": with_mem_passed
             })
             
-            if not with_mem_passed:
-                with open("debug.log", "a", encoding="utf-8") as logf:
-                    logf.write(f"Scenario {scene['id']} FAIL: Expected '{scene['expected']}' in '{with_mem_res}'\n")
-                print(f"Scenario {scene['id']}: FAIL")
-            else:
-                print(f"Scenario {scene['id']}: PASS")
+            print(f"Scenario {scene['id']}: {status}")
             
         self._generate_report(results)
 
     def _generate_report(self, results):
-        with open("BENCHMARK.md", "w", encoding="utf-8") as f:
+        os.makedirs("reports", exist_ok=True)
+        with open("reports/BENCHMARK.md", "w", encoding="utf-8") as f:
             f.write("# Benchmark Report - Multi-Memory Agent\n\n")
             f.write("| # | Scenario | No-memory result | With-memory result | Pass? |\n")
             f.write("|---|----------|------------------|---------------------|-------|\n")
